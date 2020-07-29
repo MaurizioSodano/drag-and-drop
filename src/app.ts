@@ -8,12 +8,13 @@ class Project {
     public id: string,
     public title: string,
     public description: string,
-    public staus: ProjectStatus
+    public people: number,
+    public status: ProjectStatus
   ) {}
 }
 
 //Project State Management
-type ProjectListener =(items:Project[]) =>void;
+type ProjectListener = (items: Project[]) => void;
 
 class ProjectState {
   private projects: Project[] = [];
@@ -31,14 +32,19 @@ class ProjectState {
   }
 
   addProject(title: string, description: string, numPeople: number) {
+    console.log("adding project:",title,description,numPeople);
+    
     const newProject = new Project(
-      Math.random.toString(),
+      Math.random().toString(),
       title,
       description,
-      numPeople
+      numPeople,
+      ProjectStatus.Active
     );
+    console.log(newProject);
+    
     this.projects.push(newProject);
-
+    console.log(this.projects);
     for (const listenerFn of this.listeners) {
       listenerFn(this.projects.slice());
     }
@@ -116,7 +122,15 @@ class ProjectList {
     this.assignedProjects = [];
 
     projectState.addListener((projects: Project[]) => {
-      this.assignedProjects = projects;
+      const relevantProjects = projects.filter((prj) => {
+        if (this.type==="active") {
+         
+          return prj.status === ProjectStatus.Active;
+        }
+        return prj.status === ProjectStatus.Finished;
+      });
+      console.log(this.type,projects,relevantProjects)
+      this.assignedProjects = relevantProjects;
       this.renderProjects();
     });
     this.attach();
@@ -127,7 +141,7 @@ class ProjectList {
     const listEl = document.getElementById(
       `${this.type}-projects-list`
     )! as HTMLUListElement;
-
+    listEl.innerHTML="";
     for (const prjItem of this.assignedProjects) {
       const listItem = document.createElement("li");
       listItem.textContent = prjItem.title;
